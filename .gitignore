@@ -1,0 +1,6 @@
+.env
+data/telegram.session*
+data/telegram_messages.jsonl
+data/telegram_state.json
+__pycache__/
+*.pyc

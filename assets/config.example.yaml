@@ -1,0 +1,29 @@
+# Telegram API credentials
+# Can be inline or from environment variables (TG_API_ID, TG_API_HASH, TG_PHONE)
+api_id: "${TG_API_ID}"
+api_hash: "${TG_API_HASH}"
+phone: "${TG_PHONE}"
+
+# Optional: where Telethon session will be stored
+# If omitted, defaults to <config_dir>/data/telegram.session
+session_file: ""
+
+# Chats to sync. Can be usernames (@channel), invite links, or numeric IDs.
+chats:
+  - "@example_channel"
+  - "@example_group"
+  - 123456789
+
+# Output JSONL path. If relative, it is resolved relative to the config file.
+output_jsonl: "data/telegram_messages.jsonl"
+
+# State file used for incremental sync (stores last message id per chat).
+state_file: "data/telegram_state.json"
+
+# Optional: initial sync window (preferred). Fetch messages from last N days.
+# Set to 0 or omit to disable.
+initial_days: 1
+
+# Optional: limit how many messages to fetch per chat on first run (fallback).
+# If initial_days > 0, this is ignored.
+initial_limit: 0

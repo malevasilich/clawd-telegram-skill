@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clawdbot Telegram Sync"
+  short_description: "Sync Telegram chats to JSONL for clawdbot"
+  default_prompt: "Sync and query Telegram chats for clawdbot analysis."

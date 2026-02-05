@@ -1,0 +1,19 @@
+api_id: "${TG_API_ID}"
+api_hash: "${TG_API_HASH}"
+phone: "${TG_PHONE}"
+
+session_file: "data/telegram.session"
+
+chats:
+  - -1001183585208
+  - -1001832666352
+  - -4678357599
+  - -1002027203833
+  - -1002355814838
+  - -662388734
+  - -1001837175292
+
+output_jsonl: "data/telegram_messages.jsonl"
+state_file: "data/telegram_state.json"
+initial_days: 1
+initial_limit: 0
