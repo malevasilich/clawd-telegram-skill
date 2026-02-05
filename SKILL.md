@@ -11,14 +11,27 @@ Use this skill when you need to read specific Telegram chats (listed in a config
 
 1. Create a config file (YAML). You can start from `assets/config.example.yaml`.
 2. Install dependencies:
-   - `pip install telethon pyyaml`
+   - Python: `pip install telethon pyyaml`
+   - Node: `scripts/install_node_deps.sh`
 3. Run sync:
    - `python scripts/sync_telegram.py --config /path/to/config.yaml`
    - Rebuild: `python scripts/sync_telegram.py --config /path/to/config.yaml --rebuild`
+   - Live listener: `python scripts/telegram_listen.py --config /path/to/config.yaml`
 4. Query for clawdbot:
    - `python scripts/query_telegram.py --config /path/to/config.yaml --contains "keyword" --limit 100`
+5. List Telegram chats (to get IDs for config):
+   - `python scripts/list_telegram_chats.py --config /path/to/config.yaml`
 5. Analyze latest (local clawdbot):
    - `scripts/analyze_latest.sh`
+6. Start WhatsApp listener (new messages only):
+   - `node scripts/whatsapp_listen.js --config /path/to/config.yaml`
+   - Quiet: `LISTENER_LOG=quiet node scripts/whatsapp_listen.js --config /path/to/config.yaml`
+   - Verbose: `LISTENER_LOG=verbose node scripts/whatsapp_listen.js --config /path/to/config.yaml`
+7. Start both (Telegram + WhatsApp listeners):
+   - `LISTENER_LOG=quiet scripts/start_listeners.sh`
+   - Reconnect control: `LISTENER_MAX_RETRIES=5 LISTENER_RETRY_SECONDS=5 scripts/start_listeners.sh`
+8. List WhatsApp chats (to get IDs for config):
+   - `node scripts/list_whatsapp_chats.js --config /path/to/config.yaml`
 
 ## What This Skill Provides
 
@@ -30,6 +43,10 @@ Use this skill when you need to read specific Telegram chats (listed in a config
 - `scripts/query_telegram.py`:
   - Filters the JSONL store by chat, time, or keyword.
   - Outputs JSONL to stdout for clawdbot ingestion.
+- `scripts/whatsapp_listen.js`:
+  - Connects via WhatsApp Web (QR login).
+  - Captures new incoming messages only.
+  - Appends records to JSONL with `source: "whatsapp"`.
 - `references/schema.md`:
   - JSONL schema and field meanings.
 

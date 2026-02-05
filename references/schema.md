@@ -3,7 +3,7 @@
 Each line in the output JSONL file is a single message record.
 
 Fields:
-- `source`: Fixed string "telegram".
+- `source`: "telegram" or "whatsapp".
 - `chat_id`: Numeric chat id.
 - `chat_title`: Chat title at time of sync (if available).
 - `chat_username`: Chat username (if available).

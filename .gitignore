@@ -4,3 +4,7 @@ data/telegram_messages.jsonl
 data/telegram_state.json
 __pycache__/
 *.pyc
+data/whatsapp_chats.txt
+data
+node_modules
+package-lock.json

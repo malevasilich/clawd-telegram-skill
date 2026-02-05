@@ -28,8 +28,7 @@ if [ -f "$ROOT/.env" ]; then
   set +a
 fi
 
-"$PY" "$ROOT/scripts/sync_telegram.py" --config "$ROOT/config.yaml"
-
+# Query latest into TMP
 "$PY" "$ROOT/scripts/query_telegram.py" \
   --config "$ROOT/config.yaml" \
   --since-days 1 \

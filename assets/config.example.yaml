@@ -20,6 +20,19 @@ output_jsonl: "data/telegram_messages.jsonl"
 # State file used for incremental sync (stores last message id per chat).
 state_file: "data/telegram_state.json"
 
+# WhatsApp listener (new messages only)
+# Auth directory for WhatsApp Web QR login
+whatsapp_auth_dir: "data/whatsapp_auth"
+# Optional chat allow list (JIDs or raw ids). If empty, all chats are captured.
+# Examples:
+#   - "1234567890@s.whatsapp.net"
+#   - "1234567890"  (auto -> @s.whatsapp.net)
+#   - "12345-67890@g.us"
+#   - "12345-67890" (auto -> @g.us)
+whatsapp_chats: []
+# Optional separate output file (defaults to output_jsonl if omitted)
+whatsapp_output_jsonl: ""
+
 # Optional: initial sync window (preferred). Fetch messages from last N days.
 # Set to 0 or omit to disable.
 initial_days: 1
