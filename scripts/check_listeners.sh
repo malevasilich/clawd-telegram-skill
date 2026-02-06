@@ -10,6 +10,7 @@ STALE_SECS="${STALE_SECS:-900}"   # 15 minutes
 
 RESTART=0
 QUIET=0
+STRICT_STALE=0
 
 while [ $# -gt 0 ]; do
   case "$1" in

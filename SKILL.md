@@ -32,6 +32,17 @@ Use this skill when you need to read specific Telegram chats (listed in a config
    - Reconnect control: `LISTENER_MAX_RETRIES=5 LISTENER_RETRY_SECONDS=5 scripts/start_listeners.sh`
 8. List WhatsApp chats (to get IDs for config):
    - `node scripts/list_whatsapp_chats.js --config /path/to/config.yaml`
+9. Install as launchd service:
+   - `scripts/install_launchd.sh`
+   - On-demand: `scripts/install_launchd.sh --on-demand`
+   - Status: `launchctl list | grep whatsapp_telegram_listeners`
+   - Detailed: `scripts/status_launchd.sh`
+   - Start: `scripts/start_launchd.sh`
+   - Stop: `scripts/stop_launchd.sh`
+   - Restart: `scripts/restart_launchd.sh`
+   - Status + logs: `LINES=50 scripts/status_and_logs.sh`
+   - Stop: `launchctl stop gui/$(id -u)/malevasilich.whatsapp_telegram_listeners`
+   - Uninstall: `scripts/uninstall_launchd.sh`
 
 ## What This Skill Provides
 

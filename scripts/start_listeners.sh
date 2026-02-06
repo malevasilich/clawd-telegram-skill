@@ -19,6 +19,12 @@ fi
 # Set LISTENER_LOG=quiet|verbose to control logging for both listeners
 LISTENER_LOG="${LISTENER_LOG:-}"
 
+# Ensure node/python are resolvable in launchd environment
+if [ -d "$HOME/.pyenv/shims" ]; then
+  export PATH="$HOME/.pyenv/shims:$PATH"
+fi
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+
 terminated=0
 cleanup() {
   terminated=1
@@ -36,8 +42,20 @@ cleanup() {
 
 trap cleanup INT TERM
 
+# Pick node interpreter
+if command -v node >/dev/null 2>&1; then
+  NODE=node
+elif [ -x "/opt/homebrew/bin/node" ]; then
+  NODE="/opt/homebrew/bin/node"
+elif [ -x "/usr/local/bin/node" ]; then
+  NODE="/usr/local/bin/node"
+else
+  echo "node not found in PATH. Current PATH=$PATH" >&2
+  exit 1
+fi
+
 # Start WhatsApp listener in background
-LISTENER_LOG="$LISTENER_LOG" node "$ROOT/scripts/whatsapp_listen.js" --config "$ROOT/config.yaml" &
+LISTENER_LOG="$LISTENER_LOG" "$NODE" "$ROOT/scripts/whatsapp_listen.js" --config "$ROOT/config.yaml" &
 WA_PID=$!
 
 # Pick python interpreter
