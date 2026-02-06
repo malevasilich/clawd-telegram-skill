@@ -1,0 +1,71 @@
+# Update-chats filtering rules (portable)
+# Used by scripts/analyze_update_chats.py
+
+version: 1
+
+# Treat these messages as low-signal acknowledgements; drop from "discussion" output.
+ack_noise_regexes:
+  - '^(ок|ок\.|принято|спасибо|да|понял|понятно|\+|👍|👌|окей|хорошо!?|ясно|пон)\s*!*\.*$'
+
+# Monitoring dump detection (plain substring match).
+monitoring_dump_prefixes:
+  - 'FROM:'
+monitoring_dump_substrings:
+  - 'SUBJECT: EM Event:'
+
+# Drop clears/resolved notifications from monitoring output.
+monitoring_clear_regex: '(\bClear\b|\[RESOLVED\]|\bRESOLVED\b|\bСервис восстановлен\b|🟩)'
+
+# Severity gating for monitoring messages.
+monitoring_severity_regex: '(\bFIRING\b|\bCRITICAL\b|\bWARNING\b|\bDOWN\b|🟥|‼️)'
+
+# Only surface monitoring messages that match these domain keywords.
+monitoring_domain_keywords:
+  - 'ogg'
+  - 'goldengate'
+  - 'дбк'
+  - 'dbk'
+  - 'open way'
+  - 'openway'
+  - 'ow'
+  - 'way4'
+  - 'process'
+  - 'процессинг'
+  - 'processing'
+  - 'перевод'
+  - 'p2p'
+  - 'c2c'
+  - 'card2card'
+  - 'oct'
+  - 'платеж'
+  - 'payment'
+  - 'ecomm'
+  - 'e-commerce'
+  - '3ds'
+  - '3-d secure'
+  - 'merchant'
+  - 'visa'
+  - 'mastercard'
+  - 'mps'
+  - 'нпк'
+  - 'humo'
+  - 'upi'
+  - 'трафик'
+  - 'traffic'
+  - 'канал'
+  - 'channel'
+  - '502'
+  - '5xx'
+
+# Ignore monitoring messages if they match ANY of these (case-insensitive substring).
+# (mv preference)
+monitoring_ignore_substrings:
+  - 'SuperApp Halyk. Чат бот'
+  - 'Чат бот в разделе уведомления'
+  - 'кабинет оператора'
+
+# WhatsApp chat title mapping file (jid<TAB>type<TAB>title format).
+whatsapp_chats_file: 'data/whatsapp_chats.txt'
+
+# State file to remember last-seen per chat + cached WhatsApp jid->title.
+state_file: 'data/update_chats_state.json'
