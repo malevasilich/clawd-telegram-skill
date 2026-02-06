@@ -36,6 +36,7 @@ class Rules:
     monitoring_severity_regex: str
     monitoring_domain_keywords: list[str]
     monitoring_ignore_substrings: list[str]
+    wa_sender_map: dict[str, str]
     whatsapp_chats_file: str
     state_file: str
 
@@ -60,6 +61,7 @@ def load_rules(path: Path) -> Rules:
         monitoring_severity_regex=str(d.get("monitoring_severity_regex") or ""),
         monitoring_domain_keywords=list(d.get("monitoring_domain_keywords") or []),
         monitoring_ignore_substrings=[s.lower() for s in (d.get("monitoring_ignore_substrings") or [])],
+        wa_sender_map={str(k): str(v) for k, v in (d.get("wa_sender_map") or {}).items()},
         whatsapp_chats_file=str(d.get("whatsapp_chats_file") or "data/whatsapp_chats.txt"),
         state_file=str(d.get("state_file") or "data/update_chats_state.json"),
     )
@@ -285,7 +287,11 @@ def main() -> int:
         for m in sorted(new_disc, key=lambda x: ((x.get("chat_title") or ""), (x.get("date") or ""), str(x.get("message_id") or ""))):
             chat = m.get("chat_title") or "(unknown chat)"
             dt = m.get("date") or ""
-            who = m.get("sender_username") or str(m.get("sender_id") or "")
+            if (m.get("source") or "").lower() == "whatsapp":
+                sid = str(m.get("sender_id") or "")
+                who = rules.wa_sender_map.get(sid) or (m.get("sender_username") or sid)
+            else:
+                who = m.get("sender_username") or str(m.get("sender_id") or "")
             print(f"- {chat} ({dt}) {who}: {text_compact(m.get('text') or '')}")
 
     return 0

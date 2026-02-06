@@ -64,6 +64,10 @@ monitoring_ignore_substrings:
   - 'Чат бот в разделе уведомления'
   - 'кабинет оператора'
 
+# WhatsApp sender mapping (optional): sender_id (@lid / @s.whatsapp.net) -> human name
+wa_sender_map:
+  "271274496504050@lid": "Литвин Александр"
+
 # WhatsApp chat title mapping file (jid<TAB>type<TAB>title format).
 whatsapp_chats_file: 'data/whatsapp_chats.txt'
 
