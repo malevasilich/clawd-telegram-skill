@@ -3,6 +3,19 @@ set -euo pipefail
 
 ROOT="/Users/mv/Dropbox/dev/python/clawd-telegram-skill"
 
+# Prefer pyenv python if available (keeps deps consistent with other scripts)
+if [ -d "$HOME/.pyenv/shims" ]; then
+  export PATH="$HOME/.pyenv/shims:$PATH"
+fi
+
+# Load local env if present (API keys etc)
+if [ -f "$ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ROOT/.env"
+  set +a
+fi
+
 # Set LISTENER_LOG=quiet|verbose to control logging for both listeners
 LISTENER_LOG="${LISTENER_LOG:-}"
 
@@ -27,8 +40,18 @@ trap cleanup INT TERM
 LISTENER_LOG="$LISTENER_LOG" node "$ROOT/scripts/whatsapp_listen.js" --config "$ROOT/config.yaml" &
 WA_PID=$!
 
+# Pick python interpreter
+if command -v python >/dev/null 2>&1; then
+  PY=python
+elif command -v python3 >/dev/null 2>&1; then
+  PY=python3
+else
+  echo "No python interpreter found" >&2
+  exit 1
+fi
+
 # Start Telegram listener in background
-LISTENER_LOG="$LISTENER_LOG" python "$ROOT/scripts/telegram_listen.py" --config "$ROOT/config.yaml" &
+LISTENER_LOG="$LISTENER_LOG" "$PY" "$ROOT/scripts/telegram_listen.py" --config "$ROOT/config.yaml" &
 TG_PID=$!
 
 echo "Telegram listener running (PID $TG_PID)."
