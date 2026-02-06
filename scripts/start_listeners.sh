@@ -57,6 +57,14 @@ TG_PID=$!
 echo "Telegram listener running (PID $TG_PID)."
 echo "WhatsApp listener running (PID $WA_PID). Press Ctrl+C to stop."
 while true; do
+  # Optional health check
+  if [ "${CHECK_EVERY_SECONDS:-0}" -gt 0 ]; then
+    "$ROOT/scripts/check_listeners.sh" --quiet || {
+      echo "Health check failed. Exiting so supervisor can restart." >&2
+      exit 1
+    }
+    sleep "${CHECK_EVERY_SECONDS}"
+  fi
   if ! kill -0 "$WA_PID" 2>/dev/null; then
     wait "$WA_PID" || WA_RC=$?
     if [ "${terminated}" -eq 1 ]; then

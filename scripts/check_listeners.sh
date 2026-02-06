@@ -10,7 +10,6 @@ STALE_SECS="${STALE_SECS:-900}"   # 15 minutes
 
 RESTART=0
 QUIET=0
-STRICT_STALE=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -34,11 +33,9 @@ if [ -d "$HOME/.pyenv/shims" ]; then
   export PATH="$HOME/.pyenv/shims:$PATH"
 fi
 
-# Find running listeners
-TG_PID=""
-WA_PID=""
-TG_PID=$(ps ax -o pid=,command= | awk '/clawd-telegram-skill\/scripts\/telegram_listen\.py/ && !/awk/ {print $1; exit}') || true
-WA_PID=$(ps ax -o pid=,command= | awk '/clawd-telegram-skill\/scripts\/whatsapp_listen\.js/ && !/awk/ {print $1; exit}') || true
+# Find running listeners (use pgrep for safety)
+TG_PID=$(pgrep -f "clawd-telegram-skill/scripts/telegram_listen\\.py" | head -n 1 || true)
+WA_PID=$(pgrep -f "clawd-telegram-skill/scripts/whatsapp_listen\\.js" | head -n 1 || true)
 
 healthy=1
 
@@ -55,8 +52,6 @@ if [ -z "$WA_PID" ]; then
 else
   say "[OK] WhatsApp listener running (PID $WA_PID)"
 fi
-
-STRICT_STALE=0
 
 # Staleness check: output JSONL updated recently?
 # NOTE: If no one writes new messages, JSONL won't change. So by default this is only a warning.
@@ -86,6 +81,13 @@ if [ "$RESTART" -eq 1 ]; then
   if [ -n "$TG_PID" ]; then kill "$TG_PID" 2>/dev/null || true; fi
   if [ -n "$WA_PID" ]; then kill "$WA_PID" 2>/dev/null || true; fi
   sleep 1
+  # Recheck to avoid duplicate starts
+  TG_PID=$(pgrep -f "clawd-telegram-skill/scripts/telegram_listen\\.py" | head -n 1 || true)
+  WA_PID=$(pgrep -f "clawd-telegram-skill/scripts/whatsapp_listen\\.js" | head -n 1 || true)
+  if [ -n "$TG_PID" ] || [ -n "$WA_PID" ]; then
+    say "[SKIP] Listener still running after kill attempt; not starting a duplicate."
+    exit 1
+  fi
   cd "$ROOT"
   LISTENER_LOG="${LISTENER_LOG:-quiet}" "$ROOT/scripts/start_listeners.sh" >/dev/null 2>&1 &
   disown || true

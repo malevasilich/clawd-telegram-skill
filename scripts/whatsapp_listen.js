@@ -158,7 +158,7 @@ async function start() {
         const statusCode = lastDisconnect?.error?.output?.statusCode;
         if (statusCode === DisconnectReason.connectionReplaced || statusCode === 409) {
           console.error('[whatsapp] session replaced: another client is using the same auth. Stop other listener or use a separate auth dir.');
-          return;
+          process.exit(1);
         }
         if (statusCode === DisconnectReason.restartRequired) {
           console.log('[whatsapp] restart required');
@@ -170,6 +170,7 @@ async function start() {
       }
       if (connection === 'open') {
         console.log('[whatsapp] connected');
+        attempt = 0;
       }
     });
 

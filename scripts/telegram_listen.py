@@ -104,7 +104,7 @@ def main() -> int:
 
     max_retries = int(os.environ.get("LISTENER_MAX_RETRIES", "5"))
     base_delay = int(os.environ.get("LISTENER_RETRY_SECONDS", "5"))
-    attempt = 0
+    fail_streak = 0
 
     while True:
         client = TelegramClient(str(session_path), api_id, api_hash)
@@ -123,6 +123,7 @@ def main() -> int:
 
         try:
             client.start(phone=phone)
+            fail_streak = 0
             print("[telegram] listener started")
             client.run_until_disconnected()
             print("[telegram] disconnected", file=sys.stderr)
@@ -133,12 +134,12 @@ def main() -> int:
                 client.disconnect()
             except Exception:
                 pass
-        attempt += 1
-        if attempt >= max_retries:
+        fail_streak += 1
+        if fail_streak >= max_retries:
             print("[telegram] max reconnect attempts reached; exiting with error", file=sys.stderr)
             return 1
-        delay = base_delay * (2 ** (attempt - 1))
-        print(f"[telegram] reconnecting in {delay}s (attempt {attempt}/{max_retries})", file=sys.stderr)
+        delay = base_delay * (2 ** (fail_streak - 1))
+        print(f"[telegram] reconnecting in {delay}s (attempt {fail_streak}/{max_retries})", file=sys.stderr)
         time.sleep(delay)
     return 1
 
