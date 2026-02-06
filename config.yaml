@@ -37,6 +37,8 @@ whatsapp_chats:
   - 120363295814723721@g.us
   - 120363199590764686@g.us
   - 120363423687483006@g.us
+  - 77029992700-1449816829@g.us  # Банкоматы_ мониторинг
+  - 77010750100-1488538674@g.us  # МОНИТОРИНГ
 
 whatsapp_output_jsonl: "data/telegram_messages.jsonl"
 initial_days: 1
