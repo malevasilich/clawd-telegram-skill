@@ -154,6 +154,7 @@ def main() -> int:
     ap.add_argument("--jsonl", required=True, help="Path to aggregated JSONL (TG+WA)")
     ap.add_argument("--rules", default="config.update_chats_rules.yaml", help="Path to rules YAML")
     ap.add_argument("--print-empty", action="store_true", help="Print an explicit 'no new messages' line")
+    ap.add_argument("--bootstrap", action="store_true", help="Mark all current messages as seen and exit")
     args = ap.parse_args()
 
     repo = Path(__file__).resolve().parents[1]
@@ -207,15 +208,24 @@ def main() -> int:
         if cid not in max_key_by_chat or k > max_key_by_chat[cid]:
             max_key_by_chat[cid] = k
 
-    # First run bootstrap: if no state file yet, mark everything as seen and exit.
-    # This makes a fresh install quiet by default; you can delete the state file to re-bootstrap.
-    if not state_existed:
+    def do_bootstrap(reason: str) -> int:
         for cid, k in max_key_by_chat.items():
             state["chat_last_key"][cid] = {"date": k[0], "message_id": k[1]}
         save_state(state_path, state)
         if args.print_empty:
-            print("Новых сообщений нет. (инициализация состояния)")
+            print(f"Новых сообщений нет. ({reason})")
         return 0
+
+    # Bootstrap conditions:
+    # - explicit flag
+    # - first run (no state file)
+    # - state exists but is empty (e.g., copied without state)
+    if args.bootstrap:
+        return do_bootstrap("инициализация состояния")
+    if not state_existed:
+        return do_bootstrap("инициализация состояния")
+    if not state.get("chat_last_key"):
+        return do_bootstrap("инициализация состояния")
 
     new_monitor: list[dict[str, Any]] = []
     new_disc: list[dict[str, Any]] = []
