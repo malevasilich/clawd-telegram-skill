@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="/Users/mv/Dropbox/dev/python/clawd-telegram-skill"
-TMP="/tmp/clawdbot_telegram.jsonl"
+SRC_JSONL="$ROOT/data/telegram_messages.jsonl"
 
 cd "$ROOT"
 
@@ -20,11 +20,8 @@ else
   exit 1
 fi
 
-# Refresh aggregated jsonl (TG+WA) into $TMP
-"$ROOT/scripts/sync_and_analyze.sh" >/dev/null 2>&1 || "$ROOT/scripts/sync_and_analyze.sh"
-
-# Analyze with portable rules+state
+# No /tmp snapshot: analyze the live aggregated store directly
 "$PY" "$ROOT/scripts/analyze_update_chats.py" \
-  --jsonl "$TMP" \
+  --jsonl "$SRC_JSONL" \
   --rules "$ROOT/config.update_chats_rules.yaml" \
   --print-empty

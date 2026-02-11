@@ -35,6 +35,7 @@ Use this skill when you need to read specific Telegram chats (listed in a config
 9. Install as launchd service:
    - `scripts/install_launchd.sh`
    - On-demand: `scripts/install_launchd.sh --on-demand`
+   - Keepalive: `scripts/install_launchd_keepalive.sh`
    - Status: `launchctl list | grep whatsapp_telegram_listeners`
    - Detailed: `scripts/status_launchd.sh`
    - Start: `scripts/start_launchd.sh`
