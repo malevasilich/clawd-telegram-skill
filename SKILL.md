@@ -17,6 +17,7 @@ Use this skill when you need to read specific Telegram chats (listed in a config
    - `python scripts/sync_telegram.py --config /path/to/config.yaml`
    - Rebuild: `python scripts/sync_telegram.py --config /path/to/config.yaml --rebuild`
    - Live listener: `python scripts/telegram_listen.py --config /path/to/config.yaml`
+   - Note: use `telegram_listener_session_file` in config to avoid SQLite locks.
 4. Query for clawdbot:
    - `python scripts/query_telegram.py --config /path/to/config.yaml --contains "keyword" --limit 100`
 5. List Telegram chats (to get IDs for config):
@@ -30,17 +31,23 @@ Use this skill when you need to read specific Telegram chats (listed in a config
 7. Start both (Telegram + WhatsApp listeners):
    - `LISTENER_LOG=quiet scripts/start_listeners.sh`
    - Reconnect control: `LISTENER_MAX_RETRIES=5 LISTENER_RETRY_SECONDS=5 scripts/start_listeners.sh`
+   - Auto reset Telegram session on lock: `TELEGRAM_RESET_ON_LOCK=1 scripts/start_listeners.sh`
+   - Clean extras: `scripts/check_listeners.sh --kill-extras`
+   - Stop Telegram listener (disable): `scripts/stop_telegram_listener.sh`
+   - First-time interactive login: `scripts/first_run_setup.sh`
+   - Or separately: `scripts/first_run_telegram.sh` then `scripts/first_run_whatsapp.sh`
 8. List WhatsApp chats (to get IDs for config):
    - `node scripts/list_whatsapp_chats.js --config /path/to/config.yaml`
 9. Install as launchd service:
    - `scripts/install_launchd.sh`
    - On-demand: `scripts/install_launchd.sh --on-demand`
    - Keepalive: `scripts/install_launchd_keepalive.sh`
-   - Status: `launchctl list | grep whatsapp_telegram_listeners`
+   - Status: `launchctl list | grep whatsapp.telegram.listeners`
    - Detailed: `scripts/status_launchd.sh`
    - Start: `scripts/start_launchd.sh`
    - Stop: `scripts/stop_launchd.sh`
    - Restart: `scripts/restart_launchd.sh`
+   - Restart (clean logs): `scripts/restart_launchd_clean.sh`
    - Status + logs: `LINES=50 scripts/status_and_logs.sh`
    - Stop: `launchctl stop gui/$(id -u)/malevasilich.whatsapp_telegram_listeners`
    - Uninstall: `scripts/uninstall_launchd.sh`

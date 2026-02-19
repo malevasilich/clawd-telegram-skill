@@ -87,7 +87,12 @@ def main() -> int:
     config_path = Path(args.config).expanduser().resolve()
     cfg = load_config(config_path)
 
-    session_path = resolve_path(config_path, cfg.get("session_file", ""), "data/telegram.session")
+    listener_session = cfg.get("telegram_listener_session_file") or cfg.get("listener_session_file")
+    session_path = resolve_path(
+        config_path,
+        listener_session if listener_session is not None else cfg.get("session_file", ""),
+        "data/telegram_listener.session",
+    )
     output_path = resolve_path(config_path, cfg.get("output_jsonl", ""), "data/telegram_messages.jsonl")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -104,6 +109,7 @@ def main() -> int:
 
     max_retries = int(os.environ.get("LISTENER_MAX_RETRIES", "5"))
     base_delay = int(os.environ.get("LISTENER_RETRY_SECONDS", "5"))
+    auto_reset_lock = os.environ.get("TELEGRAM_RESET_ON_LOCK", "0") in ("1", "true", "yes")
     fail_streak = 0
 
     while True:
@@ -128,7 +134,18 @@ def main() -> int:
             client.run_until_disconnected()
             print("[telegram] disconnected", file=sys.stderr)
         except Exception as exc:
-            print(f"[telegram] disconnected: {exc}", file=sys.stderr)
+            msg = str(exc)
+            print(f"[telegram] disconnected: {msg}", file=sys.stderr)
+            if auto_reset_lock and "database is locked" in msg.lower():
+                try:
+                    lock_path = Path(str(session_path) + "-journal")
+                    if session_path.exists():
+                        session_path.unlink()
+                    if lock_path.exists():
+                        lock_path.unlink()
+                    print("[telegram] session reset due to database lock", file=sys.stderr)
+                except Exception as reset_exc:
+                    print(f"[telegram] failed to reset session: {reset_exc}", file=sys.stderr)
         finally:
             try:
                 client.disconnect()

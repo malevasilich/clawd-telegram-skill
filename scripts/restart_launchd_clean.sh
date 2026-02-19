@@ -7,7 +7,13 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 ROOT="/Users/mv/Dropbox/dev/python/clawd-telegram-skill"
+LOG_OUT="$ROOT/logs/listeners.out.log"
+LOG_ERR="$ROOT/logs/listeners.err.log"
 
 "$ROOT/scripts/stop_launchd.sh" || true
 sleep 1
+
+: > "$LOG_OUT"
+: > "$LOG_ERR"
+
 "$ROOT/scripts/start_launchd.sh"

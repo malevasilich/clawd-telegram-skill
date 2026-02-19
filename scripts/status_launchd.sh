@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-LABEL="malevasilich.whatsapp_telegram_listeners"
+LABEL="malevasilich.whatsapp.telegram.listeners"
+USER_ID="$(id -u)"
 PLIST="$HOME/Library/LaunchAgents/${LABEL}.plist"
 NOW="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 
@@ -17,7 +18,14 @@ else
   NC=""
 fi
 
-INFO=$(launchctl print "gui/$(id -u)/$LABEL" 2>/dev/null) || {
+if launchctl print "gui/$USER_ID" >/dev/null 2>&1; then
+  DOMAIN_BASE="gui/$USER_ID"
+else
+  DOMAIN_BASE="user/$USER_ID"
+fi
+DOMAIN="$DOMAIN_BASE/$LABEL"
+
+INFO=$(launchctl print "$DOMAIN" 2>/dev/null) || {
   echo "${RED}[$NOW] Service not loaded: $LABEL${NC}"
   exit 1
 }

@@ -4,6 +4,10 @@ set -euo pipefail
 ROOT="/Users/mv/Dropbox/dev/python/clawd-telegram-skill"
 CFG="$ROOT/config.yaml"
 OUT_JSONL="$ROOT/data/telegram_messages.jsonl"
+DISABLE_TELEGRAM=0
+if [ -f "$ROOT/data/disable_telegram" ] || [ "${TELEGRAM_DISABLED:-0}" = "1" ]; then
+  DISABLE_TELEGRAM=1
+fi
 
 # Threshold for "stale" output (seconds)
 STALE_SECS="${STALE_SECS:-900}"   # 15 minutes
@@ -11,12 +15,14 @@ STALE_SECS="${STALE_SECS:-900}"   # 15 minutes
 RESTART=0
 QUIET=0
 STRICT_STALE=0
+KILL_EXTRAS=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --restart) RESTART=1 ;;
     --quiet) QUIET=1 ;;
     --strict-stale) STRICT_STALE=1 ;;
+    --kill-extras) KILL_EXTRAS=1 ;;
     --stale-secs) STALE_SECS="$2"; shift ;;
     *) echo "Unknown arg: $1" >&2; exit 2 ;;
   esac
@@ -35,16 +41,30 @@ if [ -d "$HOME/.pyenv/shims" ]; then
 fi
 
 # Find running listeners (use pgrep for safety)
-TG_PID=$(pgrep -f "clawd-telegram-skill/scripts/telegram_listen\\.py" | head -n 1 || true)
-WA_PID=$(pgrep -f "clawd-telegram-skill/scripts/whatsapp_listen\\.js" | head -n 1 || true)
+TG_PIDS=$(pgrep -f "clawd-telegram-skill/scripts/telegram_listen\\.py" || true)
+WA_PIDS=$(pgrep -f "clawd-telegram-skill/scripts/whatsapp_listen\\.js" || true)
+TG_PID=$(echo "$TG_PIDS" | head -n 1 || true)
+WA_PID=$(echo "$WA_PIDS" | head -n 1 || true)
 
 healthy=1
 
-if [ -z "$TG_PID" ]; then
-  say "[FAIL] Telegram listener is not running"
-  healthy=0
+if [ "$DISABLE_TELEGRAM" -eq 1 ]; then
+  say "[OK] Telegram listener disabled"
 else
-  say "[OK] Telegram listener running (PID $TG_PID)"
+  if [ -z "$TG_PID" ]; then
+    say "[FAIL] Telegram listener is not running"
+    healthy=0
+  else
+    say "[OK] Telegram listener running (PID $TG_PID)"
+    if [ "$(echo "$TG_PIDS" | wc -l | tr -d ' ')" -gt 1 ]; then
+      say "[WARN] Multiple Telegram listeners detected: $TG_PIDS"
+      if [ "$KILL_EXTRAS" -eq 1 ]; then
+        extras=$(echo "$TG_PIDS" | tail -n +2)
+        say "[ACTION] Killing extra Telegram listeners: $extras"
+        kill $extras 2>/dev/null || true
+      fi
+    fi
+  fi
 fi
 
 if [ -z "$WA_PID" ]; then
@@ -52,6 +72,14 @@ if [ -z "$WA_PID" ]; then
   healthy=0
 else
   say "[OK] WhatsApp listener running (PID $WA_PID)"
+  if [ "$(echo "$WA_PIDS" | wc -l | tr -d ' ')" -gt 1 ]; then
+    say "[WARN] Multiple WhatsApp listeners detected: $WA_PIDS"
+    if [ "$KILL_EXTRAS" -eq 1 ]; then
+      extras=$(echo "$WA_PIDS" | tail -n +2)
+      say "[ACTION] Killing extra WhatsApp listeners: $extras"
+      kill $extras 2>/dev/null || true
+    fi
+  fi
 fi
 
 # Staleness check: output JSONL updated recently?

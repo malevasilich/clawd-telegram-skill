@@ -3,6 +3,7 @@ api_hash: "${TG_API_HASH}"
 phone: "${TG_PHONE}"
 
 session_file: "data/telegram.session"
+telegram_listener_session_file: "data/telegram_listener.session"
 
 chats:
   - -1001183585208

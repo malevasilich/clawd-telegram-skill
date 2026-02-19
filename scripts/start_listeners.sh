@@ -42,6 +42,31 @@ cleanup() {
 
 trap cleanup INT TERM
 
+# Kill any stale listeners to avoid duplicates
+TG_EXISTING=$(pgrep -f "clawd-telegram-skill/scripts/telegram_listen\\.py" || true)
+WA_EXISTING=$(pgrep -f "clawd-telegram-skill/scripts/whatsapp_listen\\.js" || true)
+if [ -n "$TG_EXISTING" ] || [ -n "$WA_EXISTING" ]; then
+  echo "Found existing listeners. Stopping them before start..."
+  if [ -n "$TG_EXISTING" ]; then
+    kill $TG_EXISTING 2>/dev/null || true
+  fi
+  if [ -n "$WA_EXISTING" ]; then
+    kill $WA_EXISTING 2>/dev/null || true
+  fi
+  sleep 2
+  TG_EXISTING=$(pgrep -f "clawd-telegram-skill/scripts/telegram_listen\\.py" || true)
+  WA_EXISTING=$(pgrep -f "clawd-telegram-skill/scripts/whatsapp_listen\\.js" || true)
+  if [ -n "$TG_EXISTING" ] || [ -n "$WA_EXISTING" ]; then
+    echo "Force-killing remaining listeners..."
+    if [ -n "$TG_EXISTING" ]; then
+      kill -9 $TG_EXISTING 2>/dev/null || true
+    fi
+    if [ -n "$WA_EXISTING" ]; then
+      kill -9 $WA_EXISTING 2>/dev/null || true
+    fi
+  fi
+fi
+
 # Pick node interpreter
 if command -v node >/dev/null 2>&1; then
   NODE=node
@@ -52,6 +77,11 @@ elif [ -x "/usr/local/bin/node" ]; then
 else
   echo "node not found in PATH. Current PATH=$PATH" >&2
   exit 1
+fi
+
+DISABLE_TELEGRAM=0
+if [ -f "$ROOT/data/disable_telegram" ] || [ "${TELEGRAM_DISABLED:-0}" = "1" ]; then
+  DISABLE_TELEGRAM=1
 fi
 
 # Start WhatsApp listener in background
@@ -68,11 +98,18 @@ else
   exit 1
 fi
 
-# Start Telegram listener in background
-LISTENER_LOG="$LISTENER_LOG" "$PY" "$ROOT/scripts/telegram_listen.py" --config "$ROOT/config.yaml" &
-TG_PID=$!
+# Start Telegram listener in background (if enabled)
+if [ "$DISABLE_TELEGRAM" -eq 1 ]; then
+  TG_PID=""
+  echo "Telegram listener disabled (marker or TELEGRAM_DISABLED=1)."
+else
+  LISTENER_LOG="$LISTENER_LOG" "$PY" "$ROOT/scripts/telegram_listen.py" --config "$ROOT/config.yaml" &
+  TG_PID=$!
+fi
 
-echo "Telegram listener running (PID $TG_PID)."
+if [ -n "$TG_PID" ]; then
+  echo "Telegram listener running (PID $TG_PID)."
+fi
 echo "WhatsApp listener running (PID $WA_PID). Press Ctrl+C to stop."
 while true; do
   # Optional health check
@@ -93,15 +130,17 @@ while true; do
     wait "$TG_PID" 2>/dev/null || true
     exit 1
   fi
-  if ! kill -0 "$TG_PID" 2>/dev/null; then
-    wait "$TG_PID" || TG_RC=$?
-    if [ "${terminated}" -eq 1 ]; then
-      exit 0
+  if [ -n "$TG_PID" ]; then
+    if ! kill -0 "$TG_PID" 2>/dev/null; then
+      wait "$TG_PID" || TG_RC=$?
+      if [ "${terminated}" -eq 1 ]; then
+        exit 0
+      fi
+      echo "Telegram listener exited (code ${TG_RC:-0})" >&2
+      kill "$WA_PID" 2>/dev/null || true
+      wait "$WA_PID" 2>/dev/null || true
+      exit 1
     fi
-    echo "Telegram listener exited (code ${TG_RC:-0})" >&2
-    kill "$WA_PID" 2>/dev/null || true
-    wait "$WA_PID" 2>/dev/null || true
-    exit 1
   fi
   sleep 1
 done

@@ -4,9 +4,12 @@ api_id: "${TG_API_ID}"
 api_hash: "${TG_API_HASH}"
 phone: "${TG_PHONE}"
 
-# Optional: where Telethon session will be stored
+# Optional: where Telethon session will be stored (used by sync/list)
 # If omitted, defaults to <config_dir>/data/telegram.session
 session_file: ""
+# Optional: separate session for live listener to avoid SQLite lock contention
+# If omitted, defaults to <config_dir>/data/telegram_listener.session
+telegram_listener_session_file: ""
 
 # Chats to sync. Can be usernames (@channel), invite links, or numeric IDs.
 chats:
